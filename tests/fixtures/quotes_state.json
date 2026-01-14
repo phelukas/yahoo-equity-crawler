@@ -1,0 +1,29 @@
+{
+  "finance": {
+    "result": {
+      "quotes": {
+        "ABC": {
+          "symbol": "ABC",
+          "shortName": "ABC Co",
+          "exchange": "NYQ",
+          "regularMarketPrice": {
+            "raw": 10
+          },
+          "currency": "USD",
+          "marketCap": {
+            "raw": 100
+          }
+        },
+        "XYZ": {
+          "symbol": "XYZ",
+          "shortName": "XYZ Corp",
+          "exchange": "NMS",
+          "regularMarketPreviousClose": {
+            "raw": 5
+          },
+          "currency": "USD"
+        }
+      }
+    }
+  }
+}

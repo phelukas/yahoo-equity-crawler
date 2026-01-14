@@ -1,0 +1,36 @@
+{
+  "finance": {
+    "result": [
+      {
+        "start": 0,
+        "count": 25,
+        "total": 3,
+        "records": [
+          {
+            "ticker": "AAA",
+            "companyName": "AAA Corp",
+            "exchange": "NYQ",
+            "regularMarketPrice": {
+              "raw": 10
+            },
+            "currency": "USD",
+            "marketCap": {
+              "raw": 100
+            }
+          },
+          {
+            "ticker": "BBB",
+            "companyName": "BBB Inc",
+            "exchange": "NMS",
+            "regularMarketPrice": {
+              "fmt": "20.50"
+            },
+            "financialCurrency": "EUR",
+            "marketCap": 200
+          }
+        ]
+      }
+    ],
+    "error": null
+  }
+}

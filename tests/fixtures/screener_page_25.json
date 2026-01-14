@@ -1,0 +1,38 @@
+{
+  "finance": {
+    "result": [
+      {
+        "start": 25,
+        "count": 25,
+        "total": 3,
+        "records": [
+          {
+            "ticker": "BBB",
+            "companyName": "BBB Inc",
+            "exchange": "NMS",
+            "regularMarketPrice": {
+              "raw": 20.5
+            },
+            "currency": "EUR",
+            "marketCap": {
+              "raw": 200
+            }
+          },
+          {
+            "ticker": "CCC",
+            "companyName": "CCC LLC",
+            "exchange": "BUE",
+            "regularMarketPrice": {
+              "raw": 30
+            },
+            "currency": "ARS",
+            "marketCap": {
+              "raw": 300
+            }
+          }
+        ]
+      }
+    ],
+    "error": null
+  }
+}

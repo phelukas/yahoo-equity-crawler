@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yahoo-equity-crawler"
+version = "0.1.0"
+description = "Rastreador de ações do Yahoo Finance usando Selenium e BeautifulSoup"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Pedro Lucas Teixeira da Silva", email = "ppedrolukas19@gmail.com" }
+]
+
+dependencies = [
+  "selenium>=4.16.0",
+  "beautifulsoup4>=4.12.3",
+  "lxml>=5.1.0",
+  "requests>=2.31.0",
+  "pydantic>=2.6.0",
+  "python-dotenv>=1.0.1"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-cov>=4.1.0",
+  "ruff>=0.3.0",
+  "mypy>=1.8.0",
+  "types-beautifulsoup4"
+]
+
+[project.scripts]
+yahoo-crawler = "yahoo_crawler.cli:main"
+
+# -----------------------
+# Ruff (lint + format)
+# -----------------------
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# -----------------------
+# Mypy
+# -----------------------
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+# -----------------------
+# Pytest
+# -----------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+markers = [
+  "e2e: end-to-end tests (selenium)"
+]

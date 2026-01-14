@@ -1,0 +1,47 @@
+# --- Byte-code / Otimização ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ambientes Virtuais ---
+.venv/
+venv/
+ENV/
+env/
+build/
+dist/
+*.egg-info/
+
+# --- Configurações e Variáveis de Ambiente ---
+.env
+.flaskenv
+*.local
+secrets.json
+
+# --- Logs e Dados ---
+*.log
+logs/
+data/
+output.csv
+output_full.csv
+output_strict.csv
+output*.csv
+*.sqlite
+artifacts/
+.pytest_cache/
+
+# --- Navegadores (Selenium/Crawlers) ---
+.wdm/
+chromedriver
+geckodriver
+.ipynb_checkpoints/
+
+# --- IDEs (VS Code, PyCharm) ---
+.vscode/
+.idea/
+.project
+.settings/
+
+# --- Sistema Operacional ---
+.DS_Store
+Thumbs.db

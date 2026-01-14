@@ -1,0 +1,8 @@
+services:
+  crawler:
+    build: .
+    image: yahoo-crawler:latest
+    working_dir: /app
+    volumes:
+      - .:/app
+    entrypoint: ["yahoo-crawler"]
