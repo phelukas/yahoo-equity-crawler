@@ -19,7 +19,7 @@ def create_chrome_driver(cfg: DriverConfig) -> webdriver.Chrome:
     if cfg.headless:
         options.add_argument("--headless=new")
 
-    # defaults estáveis para container/CI e evitar travas
+    # padrões estáveis para container/CI e evitar travas
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")

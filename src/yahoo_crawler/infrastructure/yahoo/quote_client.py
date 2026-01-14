@@ -157,7 +157,7 @@ class YahooQuoteClient:
             try:
                 response = self._session.get(url, params=params, timeout=self._timeout)
             except requests.RequestException as exc:
-                logger.warning("HTTP request failed | attempt=%s | error=%s", attempt, exc)
+                logger.warning("Requisição HTTP falhou | tentativa=%s | erro=%s", attempt, exc)
                 if attempt == self._max_attempts:
                     self._save_error_artifact(url, params, str(exc))
                     return None

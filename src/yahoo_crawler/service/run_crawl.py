@@ -48,11 +48,11 @@ def run_crawl(settings: Settings) -> None:
         nav = YahooNavigator(driver)
         nav.open(region=settings.region)
 
-        logger.info("After open | url=%s", driver.current_url)
+        logger.info("Após abrir | url=%s", driver.current_url)
 
         seed_ready = nav.wait_for_screener_seed()
         if not seed_ready:
-            logger.warning("Screener seed not detected in DOM after wait")
+            logger.warning("Seed do screener não detectada no DOM após a espera")
         result = nav.get_page_source()
 
         artifacts = Path("artifacts")
@@ -61,9 +61,9 @@ def run_crawl(settings: Settings) -> None:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         html_file = artifacts / f"last_page_{ts}.html"
         html_file.write_text(result.page_source, encoding="utf-8")
-        logger.info("Saved debug HTML | path=%s", html_file)
+        logger.info("HTML de depuração salvo | caminho=%s", html_file)
 
-        logger.info("Page source loaded | chars=%s", len(result.page_source))
+        logger.info("Fonte da página carregada | chars=%s", len(result.page_source))
 
         rows_data: list[dict] = []
         source = "html"
@@ -75,14 +75,14 @@ def run_crawl(settings: Settings) -> None:
                 screener_url = dom_url
                 if dom_body:
                     screener_criteria = parse_screener_seed_body(dom_body)
-                logger.info("Screener seed recovered from DOM")
+                logger.info("Seed do screener recuperada do DOM")
         if not screener_url:
             screener_url = SCREENER_URL
-            logger.warning("Screener seed missing; using default screener criteria")
+            logger.warning("Seed do screener ausente; usando critérios padrão do screener")
 
         try:
             if screener_criteria:
-                logger.info("Screener criteria found | region=%s", settings.region)
+                logger.info("Critérios do screener encontrados | região=%s", settings.region)
             screener = YahooScreenerClient(
                 region=settings.region,
                 user_agent=nav.get_user_agent(),
@@ -94,7 +94,7 @@ def run_crawl(settings: Settings) -> None:
             if rows_data:
                 source = "screener_api"
                 logger.info(
-                    "Screener pagination done | pages=%s | total_items=%s | unique=%s | dup=%s | total_expected=%s | elapsed=%.2fs",
+                    "Paginação do screener concluída | páginas=%s | total_itens=%s | únicos=%s | duplicados=%s | total_esperado=%s | tempo=%.2fs",
                     stats.get("pages"),
                     stats.get("total_items"),
                     stats.get("unique_symbols"),
@@ -103,9 +103,9 @@ def run_crawl(settings: Settings) -> None:
                     stats.get("elapsed_seconds"),
                 )
             else:
-                logger.warning("Screener pagination returned no rows; falling back to HTML")
+                logger.warning("Paginação do screener não retornou linhas; voltando para HTML")
         except Exception:
-            logger.exception("Screener pagination failed; falling back to HTML")
+            logger.exception("Paginação do screener falhou; voltando para HTML")
 
         if not rows_data:
             state = None
@@ -113,7 +113,7 @@ def run_crawl(settings: Settings) -> None:
             try:
                 state = extract_embedded_state(result.page_source)
             except Exception as exc:
-                logger.warning("Embedded state not found in HTML | error=%s", exc)
+                logger.warning("Estado embutido não encontrado no HTML | erro=%s", exc)
                 state = nav.get_runtime_state()
                 state_source = "runtime"
                 if state is None:
@@ -123,7 +123,11 @@ def run_crawl(settings: Settings) -> None:
                 quotes = extract_quotes(state)
                 rows = normalize_equities(quotes)
             except Exception as exc:
-                logger.warning("Failed to parse quotes from %s state | error=%s", state_source, exc)
+                logger.warning(
+                    "Falha ao interpretar cotações do estado %s | erro=%s",
+                    state_source,
+                    exc,
+                )
                 runtime_state = nav.get_runtime_state()
                 if runtime_state and runtime_state is not state:
                     state = runtime_state
@@ -132,9 +136,9 @@ def run_crawl(settings: Settings) -> None:
                     rows = normalize_equities(quotes)
                 else:
                     artifact_path = _save_parse_state(state, "parse_fail_state")
-                    logger.error("Saved parse failure state | path=%s", artifact_path)
+                    logger.error("Estado de falha de parsing salvo | caminho=%s", artifact_path)
                     logger.error(
-                        "State keys | top=%s | stores=%s",
+                        "Chaves do estado | topo=%s | stores=%s",
                         _safe_keys(state),
                         _safe_keys(_get_stores(state)),
                     )
@@ -149,7 +153,7 @@ def run_crawl(settings: Settings) -> None:
             )
             rows_data, stats = client.enrich_rows(rows_data)
             logger.info(
-                "Enrichment done | symbols=%s | batches=%s | currency=%s | market_cap=%s | failures=%s | elapsed=%.2fs",
+                "Enriquecimento concluído | símbolos=%s | lotes=%s | moeda=%s | valor_mercado=%s | falhas=%s | tempo=%.2fs",
                 stats.get("total_symbols"),
                 stats.get("batches"),
                 stats.get("enriched_currency"),
@@ -158,12 +162,12 @@ def run_crawl(settings: Settings) -> None:
                 stats.get("elapsed_seconds"),
             )
         except Exception:
-            logger.exception("Quote enrichment failed; continuing with base rows")
+            logger.exception("Enriquecimento de cotações falhou; continuando com linhas básicas")
 
         empty_currency = sum(1 for row in rows_data if not row.get("currency"))
         empty_market_cap = sum(1 for row in rows_data if not row.get("market_cap"))
         logger.info(
-            "Extracted rows | total=%s | source=%s | empty_currency=%s | empty_market_cap=%s",
+            "Linhas extraídas | total=%s | fonte=%s | moeda_vazia=%s | valor_mercado_vazio=%s",
             len(rows_data),
             source,
             empty_currency,
@@ -172,13 +176,13 @@ def run_crawl(settings: Settings) -> None:
 
         output_path = Path(settings.output)
         _write_csv(rows_data, output_path, region=settings.region, strict=settings.strict)
-        logger.info("CSV generated | path=%s", output_path)
+        logger.info("CSV gerado | caminho=%s", output_path)
 
     finally:
         try:
             driver.quit()
         except Exception:
-            logger.exception("Failed to quit driver cleanly")
+            logger.exception("Falha ao encerrar o driver corretamente")
 
 
 def _write_csv(rows: list[dict], output_path: Path, region: str, strict: bool) -> None:

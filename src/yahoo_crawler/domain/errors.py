@@ -1,10 +1,10 @@
 class CrawlerError(RuntimeError):
-    """Base exception for crawler errors."""
+    """Exceção base para erros do crawler."""
 
 
 class ParseError(CrawlerError):
-    """Raised when HTML structure is not as expected."""
+    """Lançada quando a estrutura HTML não é a esperada."""
 
 
 class NavigationError(CrawlerError):
-    """Raised when Selenium navigation/filtering fails."""
+    """Lançada quando a navegação/filtragem do Selenium falha."""

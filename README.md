@@ -53,6 +53,9 @@ symbol,name,exchange,market_cap,price,currency,region
 5) Enrichment opcional completa `currency` e `market_cap`.
 6) Gera CSV minimal ou completo.
 
+## Documentacao tecnica
+- `docs/FLUXO_TECNICO.md`
+
 ## Intraday price
 O campo `price` usa `regularMarketPrice.raw` (intraday).  
 Se ausente, faz fallback para `regularMarketPreviousClose.raw` e registra log.

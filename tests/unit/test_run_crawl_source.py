@@ -102,4 +102,4 @@ def test_run_crawl_uses_screener_source(monkeypatch, tmp_path, caplog) -> None:
         strict=True,
     )
     run_crawl_module.run_crawl(settings)
-    assert "source=screener_api" in caplog.text
+    assert "fonte=screener_api" in caplog.text

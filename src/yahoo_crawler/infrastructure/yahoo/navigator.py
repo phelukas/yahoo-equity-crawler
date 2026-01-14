@@ -52,8 +52,8 @@ class YahooNavigator:
 
     def open(self, region: str) -> None:
         """
-        Opens Yahoo Equity Screener already filtered by region using query params.
-        This is more stable than interacting with UI filters.
+        Abre o Screener de Ações do Yahoo já filtrado por região via query params.
+        Isso é mais estável do que interagir com filtros da UI.
         """
         region_code = REGION_MAP.get(region)
         if not region_code:
@@ -64,7 +64,7 @@ class YahooNavigator:
         params = {"region": region_code}
         url = f"{YAHOO_URL}?{urlencode(params)}"
 
-        logger.info("Opening Yahoo screener page | region=%s | url=%s", region, url)
+        logger.info("Abrindo página do screener do Yahoo | região=%s | url=%s", region, url)
         self._driver.get(url)
 
         # Espera a página finalizar o carregamento
@@ -74,10 +74,10 @@ class YahooNavigator:
 
         self._handle_consent_if_present()
 
-        # Guard rail: garante que continua no screener
+        # Trava de segurança: garante que continua no screener
         self._assert_on_screener()
 
-        logger.info("Opened screener | url=%s", self._driver.current_url)
+        logger.info("Screener aberto | url=%s", self._driver.current_url)
 
     def get_page_source(self) -> NavigationResult:
         return NavigationResult(page_source=self._driver.page_source)
@@ -93,7 +93,7 @@ class YahooNavigator:
         except TimeoutException:
             return False
         except WebDriverException:
-            logger.exception("Failed while waiting for screener seed")
+            logger.exception("Falha ao aguardar a seed do screener")
             return False
 
     def get_screener_seed(self) -> tuple[str | None, str | None]:
@@ -105,7 +105,7 @@ class YahooNavigator:
         try:
             result = self._driver.execute_script(script)
         except WebDriverException:
-            logger.exception("Failed to read screener seed from DOM")
+            logger.exception("Falha ao ler a seed do screener do DOM")
             return None, None
         if isinstance(result, dict):
             return result.get("url"), result.get("body")
@@ -118,12 +118,12 @@ class YahooNavigator:
         try:
             return str(self._driver.execute_script("return navigator.userAgent"))
         except WebDriverException:
-            logger.exception("Failed to read navigator.userAgent")
+            logger.exception("Falha ao ler navigator.userAgent")
             return ""
 
     def get_runtime_state(self) -> dict | None:
         """
-        Attempts to fetch state from runtime JS variables when HTML lacks embedded JSON.
+        Tenta obter o estado a partir de variáveis JS em runtime quando o HTML não contém JSON embutido.
         """
         candidates = [
             ("__NEXT_DATA__", "return window.__NEXT_DATA__ || null;"),
@@ -138,7 +138,7 @@ class YahooNavigator:
             except WebDriverException:
                 continue
             if isinstance(value, dict):
-                logger.info("Runtime state found | source=%s", name)
+                logger.info("Estado em tempo de execução encontrado | origem=%s", name)
                 return value
         return None
 
@@ -155,7 +155,7 @@ class YahooNavigator:
         if not consent_hint:
             return
 
-        logger.info("Consent flow detected | url=%s", self._driver.current_url)
+        logger.info("Fluxo de consentimento detectado | url=%s", self._driver.current_url)
         selectors = [
             "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'accept')]",
             "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'agree')]",
@@ -176,7 +176,7 @@ class YahooNavigator:
                         wait(self._driver, self._timeout).until(
                             lambda d: d.execute_script("return document.readyState") == "complete"
                         )
-                        logger.info("Consent accepted via selector | selector=%s", selector)
+                        logger.info("Consentimento aceito via seletor | seletor=%s", selector)
                         return
                 except WebDriverException:
                     continue

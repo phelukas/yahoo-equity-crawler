@@ -5,11 +5,11 @@ from decimal import Decimal, InvalidOperation
 
 def parse_price(value: str) -> Decimal:
     """
-    Converts a price string like "2,089.00" or "2089.00" to Decimal.
-    Raises ValueError if cannot parse.
+    Converte uma string de preço como "2,089.00" ou "2089.00" para Decimal.
+    Lança ValueError se não conseguir interpretar.
     """
     cleaned = (
-        value.strip().replace(",", "").replace(" ", "")  # remove thousand separators
+        value.strip().replace(",", "").replace(" ", "")  # remove separadores de milhar
     )
 
     if cleaned in {"", "-", "—", "N/A"}:

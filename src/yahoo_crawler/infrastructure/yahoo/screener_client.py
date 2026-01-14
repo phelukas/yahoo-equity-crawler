@@ -121,7 +121,7 @@ class YahooScreenerClient:
         total_expected: int | None = None
         self._crumb = self._get_crumb()
         if not self._crumb:
-            logger.warning("Screener crumb not available; request may fail")
+            logger.warning("Crumb do screener indisponível; a requisição pode falhar")
 
         offset = 0
         while pages < self._max_pages and len(seen) < self._max_items:
@@ -132,7 +132,7 @@ class YahooScreenerClient:
                 total_expected = self._last_total
             pages += 1
             if items == 0:
-                logger.info("Screener page empty | page=%s | start=%s", pages - 1, offset)
+                logger.info("Página do screener vazia | página=%s | início=%s", pages - 1, offset)
                 break
 
             new_items = 0
@@ -150,7 +150,7 @@ class YahooScreenerClient:
                 new_items += 1
 
             logger.info(
-                "Screener page | page=%s | start=%s | count=%s | items=%s | new=%s | dup=%s | total_unique=%s",
+                "Página do screener | página=%s | início=%s | quantidade=%s | itens=%s | novos=%s | duplicados=%s | total_unicos=%s",
                 pages - 1,
                 offset,
                 self._count,
@@ -200,7 +200,7 @@ class YahooScreenerClient:
                     timeout=self._timeout,
                 )
             except requests.RequestException as exc:
-                logger.warning("Screener HTTP failed | attempt=%s | error=%s", attempt, exc)
+                logger.warning("HTTP do screener falhou | tentativa=%s | erro=%s", attempt, exc)
                 if attempt == self._max_attempts:
                     self._save_error_artifact(url, params, str(exc))
                     return None
@@ -316,7 +316,9 @@ def _normalize_item(item: dict) -> dict | None:
     if price_value is None:
         price_value = item.get("regularMarketPreviousClose")
         if price_value is not None:
-            logger.info("Price fallback to regularMarketPreviousClose | symbol=%s", symbol)
+            logger.info(
+                "Preço alternativo para regularMarketPreviousClose | símbolo=%s", symbol
+            )
     if price_value is None:
         price_value = item.get("price") or item.get("lastPrice")
     price = _normalize_value(price_value)

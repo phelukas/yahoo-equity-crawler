@@ -24,8 +24,8 @@ class EquityRow:
 
 def extract_screener_seed(page_source: str) -> tuple[str | None, dict | None]:
     """
-    Finds the SvelteKit fetched screener endpoint URL and its rawCriteria payload.
-    Uses BeautifulSoup to satisfy the PDF requirement with real parsing.
+    Encontra a URL do endpoint de screener buscado pelo SvelteKit e seu payload rawCriteria.
+    Usa BeautifulSoup para cumprir o requisito do PDF com parsing real.
     """
     soup = BeautifulSoup(page_source, "lxml")
     for script in soup.find_all("script"):
@@ -52,7 +52,7 @@ def parse_screener_seed_body(body: str) -> dict | None:
 
 
 def extract_embedded_state(page_source: str) -> dict:
-    """Extracts embedded JSON state from HTML using multiple strategies."""
+    """Extrai o estado JSON embutido do HTML usando múltiplas estratégias."""
     script_info = _collect_script_info(page_source)
 
     state = _extract_next_data_state(page_source)
@@ -88,7 +88,7 @@ def extract_embedded_state(page_source: str) -> dict:
 
 
 def extract_quotes(state: dict) -> list[dict]:
-    """Finds the list of quote dicts within an extracted state tree."""
+    """Encontra a lista de dicionários de cotações dentro da árvore de estado extraída."""
     candidates = _candidates_from_known_paths(state)
     best = _pick_best_candidate(candidates)
     if best:
@@ -121,7 +121,7 @@ def extract_quotes(state: dict) -> list[dict]:
 
 
 def normalize_equities(quotes: list[dict]) -> list[EquityRow]:
-    """Normalizes quote dicts into EquityRow records."""
+    """Normaliza dicionários de cotações em registros EquityRow."""
     rows: list[EquityRow] = []
     for quote in quotes:
         if not isinstance(quote, dict):
@@ -145,7 +145,9 @@ def normalize_equities(quotes: list[dict]) -> list[EquityRow]:
         if price_value is None:
             price_value = quote.get("regularMarketPreviousClose")
             if price_value is not None:
-                logger.info("Price fallback to regularMarketPreviousClose | symbol=%s", symbol)
+                logger.info(
+                    "Preço alternativo para regularMarketPreviousClose | símbolo=%s", symbol
+                )
         if price_value is None:
             price_value = quote.get("price") or quote.get("lastPrice")
         price = _normalize_value(price_value)
