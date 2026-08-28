@@ -28,4 +28,5 @@ def create_chrome_driver(cfg: DriverConfig) -> webdriver.Chrome:
     driver = webdriver.Chrome(options=options)
     driver.set_page_load_timeout(cfg.page_load_timeout)
     return driver
- 
+
+
