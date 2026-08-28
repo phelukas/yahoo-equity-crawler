@@ -4,7 +4,7 @@ import logging
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 from yahoo_crawler.config import Settings
 from yahoo_crawler.infrastructure.browser.driver_factory import (
@@ -189,7 +189,7 @@ def _write_csv(rows: list[dict], output_path: Path, region: str, strict: bool) -
     headers = MINIMAL_HEADERS if strict else CSV_HEADERS
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", newline="", encoding="utf-8") as handle:
-        quoting = csv.QUOTE_ALL if strict else csv.QUOTE_MINIMAL
+        quoting = cast(Literal[0, 1, 2, 3], csv.QUOTE_ALL if strict else csv.QUOTE_MINIMAL)
         writer = csv.DictWriter(handle, fieldnames=headers, quoting=quoting)
         writer.writeheader()
         for row in rows:
