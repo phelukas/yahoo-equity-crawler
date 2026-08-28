@@ -14,6 +14,7 @@ class DriverConfig:
 
 def create_chrome_driver(cfg: DriverConfig) -> webdriver.Chrome:
     options = ChromeOptions()
+    options.page_load_strategy = "eager"
 
     # headless moderno (Chrome >= 109)
     if cfg.headless:

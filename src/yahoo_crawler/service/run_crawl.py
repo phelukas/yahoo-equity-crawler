@@ -11,6 +11,7 @@ from yahoo_crawler.infrastructure.browser.driver_factory import (
     DriverConfig,
     create_chrome_driver,
 )
+from yahoo_crawler.infrastructure.postgres.repository import PostgresEquityRepository
 from yahoo_crawler.infrastructure.yahoo.navigator import YahooNavigator
 from yahoo_crawler.infrastructure.yahoo.parser import (
     extract_embedded_state,
@@ -177,6 +178,19 @@ def run_crawl(settings: Settings) -> None:
         output_path = Path(settings.output)
         _write_csv(rows_data, output_path, region=settings.region, strict=settings.strict)
         logger.info("CSV gerado | caminho=%s", output_path)
+
+        if settings.database_url:
+            load_result = PostgresEquityRepository(settings.database_url).load_snapshot(
+                rows_data,
+                region=settings.region,
+                source=source,
+            )
+            logger.info(
+                "Carga PostgreSQL concluída | run_id=%s | recebidos=%s | carregados=%s",
+                load_result.run_id,
+                load_result.records_received,
+                load_result.records_loaded,
+            )
 
     finally:
         try:

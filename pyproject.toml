@@ -18,7 +18,8 @@ dependencies = [
   "lxml>=5.1.0",
   "requests>=2.31.0",
   "pydantic>=2.6.0",
-  "python-dotenv>=1.0.1"
+  "python-dotenv>=1.0.1",
+  "psycopg[binary]>=3.2,<4"
 ]
 
 [project.optional-dependencies]
@@ -64,6 +65,10 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 addopts = "-ra -q"
 markers = [
-  "e2e: end-to-end tests (selenium)"
+  "e2e: end-to-end tests (selenium)",
+  "integration: tests that require PostgreSQL"
 ]
+
+[tool.setuptools.package-data]
+yahoo_crawler = ["infrastructure/postgres/migrations/*.sql"]
 

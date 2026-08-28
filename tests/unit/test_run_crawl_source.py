@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
 from yahoo_crawler.config import Settings
 from yahoo_crawler.infrastructure.yahoo.navigator import NavigationResult
@@ -68,6 +69,20 @@ class DummyScreener:
 
 
 def test_run_crawl_uses_screener_source(monkeypatch, tmp_path, caplog) -> None:
+    database_loads = []
+
+    class DummyRepository:
+        def __init__(self, database_url: str) -> None:
+            assert database_url == "postgresql://test"
+
+        def load_snapshot(self, rows, *, region, source):
+            database_loads.append((rows, region, source))
+            return SimpleNamespace(
+                run_id="test-run",
+                records_received=len(rows),
+                records_loaded=len(rows),
+            )
+
     caplog.set_level(logging.INFO)
     monkeypatch.setattr(run_crawl_module, "create_chrome_driver", lambda cfg: DummyDriver())
     monkeypatch.setattr(run_crawl_module, "YahooNavigator", DummyNavigator)
@@ -80,6 +95,7 @@ def test_run_crawl_uses_screener_source(monkeypatch, tmp_path, caplog) -> None:
         ),
     )
     monkeypatch.setattr(run_crawl_module, "YahooScreenerClient", DummyScreener)
+    monkeypatch.setattr(run_crawl_module, "PostgresEquityRepository", DummyRepository)
     stats = {
         "total_symbols": 1,
         "batches": 1,
@@ -100,6 +116,9 @@ def test_run_crawl_uses_screener_source(monkeypatch, tmp_path, caplog) -> None:
         headless=True,
         log_level="INFO",
         strict=True,
+        database_url="postgresql://test",
     )
     run_crawl_module.run_crawl(settings)
     assert "fonte=screener_api" in caplog.text
+    assert database_loads[0][1:] == ("Argentina", "screener_api")
+    assert database_loads[0][0][0]["symbol"] == "AAA"

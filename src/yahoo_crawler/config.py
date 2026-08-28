@@ -7,3 +7,4 @@ class Settings(BaseModel):
     headless: bool
     log_level: str
     strict: bool = False
+    database_url: str | None = None
