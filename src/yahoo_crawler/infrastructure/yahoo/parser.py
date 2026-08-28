@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 import logging
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from bs4 import BeautifulSoup
 
@@ -247,7 +248,7 @@ def _extract_sveltekit_state(page_source: str) -> dict | None:
 
 def _extract_script_json_heuristic(page_source: str) -> dict | None:
     keywords = ("quotes", "quote", "screener", "equity", "finance", "results")
-    for attrs, body in _iter_script_tags(page_source):
+    for _attrs, body in _iter_script_tags(page_source):
         if not body:
             continue
         if not any(keyword in body for keyword in keywords):
@@ -579,3 +580,4 @@ def _save_parse_fail_state(info: dict[str, Any], page_source: str) -> Path:
     }
     out.write_text(json.dumps(payload, ensure_ascii=True, indent=2), encoding="utf-8")
     return out
+
