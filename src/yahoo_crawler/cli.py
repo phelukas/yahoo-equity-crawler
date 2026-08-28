@@ -6,9 +6,6 @@ from yahoo_crawler.logging_conf import setup_logging
 from yahoo_crawler.service.run_crawl import run_crawl
 
 
-import argparse
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="yahoo-crawler",
@@ -81,3 +78,4 @@ def main() -> None:
     except Exception as exc:
         print(f"❌ Error: {exc}", file=sys.stderr)
         sys.exit(1)
+
