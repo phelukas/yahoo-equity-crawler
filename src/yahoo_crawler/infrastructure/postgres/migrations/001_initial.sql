@@ -38,4 +38,3 @@ CREATE TABLE IF NOT EXISTS equity_daily_prices (
 
 CREATE INDEX IF NOT EXISTS equity_daily_prices_symbol_date_idx
     ON equity_daily_prices (symbol, price_date DESC);
-

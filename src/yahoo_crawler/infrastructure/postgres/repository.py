@@ -167,4 +167,3 @@ def _optional_decimal(value: Any, *, field: str, row: dict[str, Any]) -> Decimal
     except (InvalidOperation, ValueError) as exc:
         symbol = row.get("symbol", "<unknown>")
         raise ValueError(f"Invalid {field} for symbol {symbol}: {value!r}") from exc
-

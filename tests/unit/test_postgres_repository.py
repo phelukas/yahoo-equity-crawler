@@ -25,4 +25,3 @@ def test_normalize_row_prepares_database_types() -> None:
 def test_normalize_row_rejects_invalid_numeric_data() -> None:
     with pytest.raises(ValueError, match="Invalid price for symbol INVALID"):
         _normalize_row({"symbol": "INVALID", "price": "not-a-number"})
-

@@ -52,4 +52,3 @@ def test_daily_load_is_idempotent() -> None:
 
     assert count == 1
     assert price == Decimal("38.100000")
-
