@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import time
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,7 +62,9 @@ class YahooScreenerClient:
         if criteria is None:
             self._criteria = _default_criteria(self._region)
         else:
-            self._criteria = _prepare_criteria(criteria, self._region)
+            self._criteria = _prepare_criteria(criteria, self._region) or _default_criteria(
+                self._region
+            )
         if "count" in self._base_params:
             try:
                 self._count = int(self._base_params["count"])
@@ -293,6 +296,8 @@ def _extract_total(payload: dict) -> int | None:
     if not isinstance(root, dict):
         return None
     total = root.get("total")
+    if not isinstance(total, (str, int, float)):
+        return None
     try:
         return int(total)
     except (TypeError, ValueError):
@@ -391,13 +396,13 @@ def _default_criteria(region: str) -> dict:
 def _prepare_criteria(criteria: dict | None, region: str) -> dict | None:
     if not isinstance(criteria, dict):
         return None
-    cloned = json.loads(json.dumps(criteria))
+    cloned = deepcopy(criteria)
     _ensure_region_filter(cloned, region.lower())
     return cloned
 
 
 def _apply_paging(criteria: dict, start: int, count: int) -> dict:
-    cloned = json.loads(json.dumps(criteria))
+    cloned = deepcopy(criteria)
     cloned["offset"] = start
     cloned["size"] = count
     return cloned
@@ -420,3 +425,4 @@ def _ensure_region_filter(criteria: dict, region: str) -> None:
             values[1] = region
             return
     operands.append({"operator": "eq", "operands": ["region", region]})
+

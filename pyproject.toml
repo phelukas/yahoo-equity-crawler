@@ -39,6 +39,8 @@ yahoo-crawler = "yahoo_crawler.cli:main"
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
 ignore = ["E501"]
 
@@ -64,3 +66,4 @@ addopts = "-ra -q"
 markers = [
   "e2e: end-to-end tests (selenium)"
 ]
+

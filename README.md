@@ -1,126 +1,152 @@
 # Yahoo Equity Crawler
 
-Crawler em Python para o Yahoo Finance Equity Screener.  
-Atende aos requisitos do teste: Selenium, BeautifulSoup e orientacao a objetos.
+[![CI](https://github.com/phelukas/yahoo-equity-crawler/actions/workflows/ci.yml/badge.svg)](https://github.com/phelukas/yahoo-equity-crawler/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+Crawler em Python que coleta ativos do Yahoo Finance Equity Screener e exporta
+os resultados para CSV. O projeto combina navegação com Selenium, descoberta do
+endpoint usado pelo screener, paginação via HTTP e fallback para parsing do HTML.
+
+O foco técnico está em resiliência a falhas externas, separação entre domínio e
+infraestrutura, execução reproduzível e testes determinísticos com fixtures.
+
+## Principais capacidades
+
+- coleta por região com paginação e deduplicação por símbolo;
+- CSV mínimo (`symbol`, `name`, `price`) ou enriquecido;
+- fallback para HTML quando o endpoint do screener não pode ser utilizado;
+- retries e logs estruturados para diagnóstico;
+- artefatos locais para investigar respostas inesperadas;
+- execução local, via Docker ou Docker Compose;
+- testes unitários e smoke test E2E separado.
+
+## Arquitetura
+
+```text
+CLI
+ └── serviço de coleta
+      ├── navegador Selenium ──> descoberta do estado do screener
+      ├── cliente do screener ─> paginação e dados principais
+      ├── cliente de cotações ─> enriquecimento opcional
+      └── exportador CSV ──────> arquivo de saída
+```
+
+O código segue uma estrutura `src/`:
+
+- `domain`: modelos e erros do domínio;
+- `service`: orquestração do caso de uso;
+- `infrastructure/browser`: configuração e sincronização do Selenium;
+- `infrastructure/yahoo`: navegação, clientes HTTP e parsing;
+- `infrastructure/export`: serialização para CSV.
+
+O fluxo detalhado e as decisões de fallback estão em
+[`docs/FLUXO_TECNICO.md`](docs/FLUXO_TECNICO.md).
 
 ## Requisitos
-- Python 3.10+
-- Google Chrome instalado (execucao local com Selenium)
-- Selenium Manager baixa o driver automaticamente a partir do Chrome instalado
-- Docker (opcional, para rodar sem setup local)
 
-## Instalacao local (passo a passo)
-1) `python -m venv .venv`
-2) `source .venv/bin/activate`
-3) `pip install -e .`
+- Python 3.10 ou superior;
+- Google Chrome para execução local com Selenium;
+- Docker, opcionalmente, para usar Chromium dentro do container.
 
-## Uso rapido
-- CSV minimal (padrao do PDF):
-  - `yahoo-crawler --region Argentina --log-level INFO --output output.csv`
-- CSV completo:
-  - `yahoo-crawler --region Argentina --full --output output_full.csv`
-- Debug visual (abre o navegador):
-  - `yahoo-crawler --region Argentina --no-headless --log-level DEBUG`
+## Instalação local
 
-## Referencia de comandos (todas as flags)
-- `--region` (obrigatorio): nome da regiao. Suportadas: `United States`, `Argentina`, `Brazil`, `Chile`, `Mexico`.
-- `--output` (opcional): caminho do CSV. Default: `output.csv`.
-- `--strict` (opcional): gera CSV minimal no formato do PDF (`symbol,name,price`).
-- `--full` (opcional): gera CSV completo com `exchange,market_cap,currency,region`.
-- `--log-level` (opcional): `DEBUG|INFO|WARNING|ERROR`. Default: `INFO`.
-- `--headless/--no-headless` (opcional): ativa/desativa o modo headless. Default: headless.
-
-Observacao: `--strict` e `--full` sao mutuamente exclusivos.  
-Se nenhuma flag for informada, o default e o CSV minimal.
-
-## Formato de saida
-CSV minimal (padrao):
-```
-"symbol","name","price"
-"AMX.BA","America Movil, S.A.B. de C.V.","2089.00"
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
 ```
 
-CSV completo (com `--full`):
+No Windows, ative o ambiente com `.venv\Scripts\activate`.
+
+## Uso
+
+CSV mínimo:
+
+```bash
+yahoo-crawler --region Argentina --output output.csv
 ```
-symbol,name,exchange,market_cap,price,currency,region
+
+CSV enriquecido:
+
+```bash
+yahoo-crawler --region Brazil --full --output output_full.csv
 ```
 
-## Como funciona (fluxo)
-1) Selenium abre o screener com `?region=XX`.
-2) O crawler extrai o endpoint SvelteKit e o `rawCriteria`.
-3) Pagina via endpoint do screener com `offset/size` (TODOS os itens da regiao).
-4) Se o endpoint falhar, cai para parsing do HTML.
-5) Enrichment opcional completa `currency` e `market_cap`.
-6) Gera CSV minimal ou completo.
+Diagnóstico visual:
 
-## Documentacao tecnica
-- `docs/FLUXO_TECNICO.md`
+```bash
+yahoo-crawler --region Mexico --no-headless --log-level DEBUG
+```
 
-## Intraday price
-O campo `price` usa `regularMarketPrice.raw` (intraday).  
-Se ausente, faz fallback para `regularMarketPreviousClose.raw` e registra log.
-
-## Paginacao e dedupe
-- Pagina com `start/count` (ou `offset/size` no payload do screener).
-- Para quando a pagina vem vazia ou com menos itens que o `count`.
-- Deduplica por `symbol`.
-
-## Artifacts e debug
-Falhas geram arquivos em `artifacts/`:
-- `last_page_<ts>.html`
-- `parse_fail_state_<ts>.json`
-- `quote_http_<status>_<ts>.txt`
-- `screener_http_<status>_<ts>.txt`
-- `screener_json_<ts>.txt`
-
-## Edge cases (market_cap)
-Alguns ativos (ETFs, microcaps, OTC) nao tem `marketCap` no Yahoo.  
-O CSV mantem o campo vazio nesses casos (sem quebrar o pipeline).
+Regiões suportadas: `United States`, `Argentina`, `Brazil`, `Chile` e `Mexico`.
+Use `yahoo-crawler --help` para consultar todas as opções.
 
 ## Docker
-Build:
-- `docker build -t yahoo-crawler .`
 
-Executar (CSV minimal):
-- `docker run --rm -v "$PWD:/app" yahoo-crawler --region Argentina --output /app/output.csv`
+```bash
+docker build -t yahoo-crawler .
+docker run --rm -v "$PWD:/app" yahoo-crawler \
+  --region Argentina --output /app/output.csv
+```
 
-Executar (CSV completo):
-- `docker run --rm -v "$PWD:/app" yahoo-crawler --region Argentina --full --output /app/output_full.csv`
+Com Compose:
 
-## Docker Compose
-- `docker compose run --rm crawler --region Argentina --output /app/output.csv`
+```bash
+docker compose run --rm crawler \
+  --region Argentina --output /app/output.csv
+```
 
-Observacao: o Docker usa Chromium dentro do container.
+## Qualidade e testes
 
-## Validado
-- Docker: `docker run --rm -v "$PWD:/app" yahoo-crawler --region Argentina --output /app/output.csv`
-- Exemplo de contagem (Argentina): `wc -l output.csv` ~= 1049 (header + 1048 itens)
+A pipeline executa lint, testes unitários com relatório de cobertura e análise
+estática em Python 3.10 e 3.12.
 
-## Testes
-- `pytest -q`
+```bash
+make check
+```
 
-## Validacao rapida
-- `yahoo-crawler --region Argentina --log-level INFO --output output.csv`
-- `wc -l output.csv`
-- `head -n 2 output.csv`
-- `pytest -q`
+Comandos equivalentes:
 
-## Troubleshooting
-- 401 Invalid Crumb: rode novamente (cookies/crumb expiram) ou tente `--no-headless` para validar consent.
-- 429/503: o Yahoo rate-limitou; aguarde alguns segundos e tente de novo.
-- CSV com poucos itens: confirme `source=screener_api` no log e a regiao suportada.
+```bash
+ruff check .
+pytest -m "not e2e" --cov=yahoo_crawler --cov-report=term-missing
+mypy src
+```
 
-## Como validar se os dados estao corretos
-1) Rode o crawler:
-   - `yahoo-crawler --region Argentina --log-level INFO --output output.csv`
-2) Verifique o formato do CSV:
-   - `head -n 2 output.csv`
-   - Deve aparecer exatamente:
-     - `"symbol","name","price"`
-3) Verifique se veio tudo:
-   - `wc -l output.csv`
-   - O total deve ser maior que o subset do HTML (>= 1000 para Argentina no momento).
-4) Verifique se o log mostra fonte correta:
-   - Procure por `source=screener_api` e `Screener pagination done`.
-5) (Opcional) Compare com a pagina web:
-   - Abra o screener com `?region=AR` e valide alguns tickers do CSV.
+O teste marcado como `e2e` acessa um serviço externo e fica fora da validação
+determinística da CI. Para executá-lo conscientemente:
+
+```bash
+pytest -m e2e
+```
+
+## Resiliência e limitações
+
+- O Yahoo Finance é um serviço externo sem contrato estável com este projeto.
+- Cookies, tokens e estrutura do screener podem mudar sem aviso.
+- Respostas `429` e `503` indicam limitação ou indisponibilidade temporária.
+- Alguns ativos não possuem `marketCap`; nesses casos o campo permanece vazio.
+- O preço usa `regularMarketPrice.raw` e recorre ao fechamento anterior quando
+  o valor intraday não está disponível.
+
+Falhas de parsing ou HTTP podem gerar evidências em `artifacts/`, como HTML,
+estado JSON e trechos de resposta. Esses arquivos não devem ser versionados.
+
+## Validação dos dados
+
+Depois da execução:
+
+```bash
+head -n 2 output.csv
+wc -l output.csv
+```
+
+Confira também nos logs a fonte usada (`screener_api` ou fallback) e compare uma
+amostra de símbolos com a interface do Yahoo. A quantidade total é variável e
+não deve ser tratada como uma constante de negócio.
+
+## Licença
+
+Distribuído sob a [licença MIT](LICENSE).
+
