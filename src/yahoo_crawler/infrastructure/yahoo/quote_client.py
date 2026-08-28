@@ -97,7 +97,11 @@ class YahooQuoteClient:
 
     def enrich_rows(self, rows: list[dict]) -> tuple[list[dict], dict]:
         start = time.time()
-        symbols = [row.get("symbol") for row in rows if row.get("symbol")]
+        symbols = [
+            symbol
+            for row in rows
+            if isinstance(symbol := row.get("symbol"), str) and symbol
+        ]
         total = len(symbols)
         if not symbols:
             stats = EnrichmentStats(0, 0, 0, 0, 0, 0.0)
@@ -117,6 +121,8 @@ class YahooQuoteClient:
         enriched_market_cap = 0
         for row in rows:
             symbol = row.get("symbol")
+            if not isinstance(symbol, str):
+                continue
             quote = quote_map.get(symbol)
             if not quote:
                 continue
@@ -223,3 +229,4 @@ def _normalize_market_cap(value: Any) -> str | None:
         return str(int(value))
     except (TypeError, ValueError):
         return str(value)
+
