@@ -4,12 +4,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-
 from urllib.parse import urlencode
 
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+
 from yahoo_crawler.infrastructure.browser.waits import wait
 
 logger = logging.getLogger(__name__)
@@ -180,3 +180,4 @@ class YahooNavigator:
                         return
                 except WebDriverException:
                     continue
+
