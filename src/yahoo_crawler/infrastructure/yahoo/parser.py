@@ -33,7 +33,7 @@ def extract_screener_seed(page_source: str) -> tuple[str | None, dict | None]:
         if "data-sveltekit-fetched" not in script.attrs:
             continue
         data_url = script.get("data-url")
-        if not data_url or "predefined/saved" not in data_url:
+        if not isinstance(data_url, str) or "predefined/saved" not in data_url:
             continue
         url = data_url.replace("&amp;", "&")
         body = (script.string or script.get_text() or "").strip()

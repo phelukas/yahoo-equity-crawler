@@ -1,8 +1,32 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: equities
+      POSTGRES_USER: equities
+      POSTGRES_PASSWORD: equities
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U equities -d equities"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   crawler:
     build: .
     image: yahoo-crawler:latest
     working_dir: /app
     volumes:
       - .:/app
+    environment:
+      DATABASE_URL: postgresql://equities:equities@postgres:5432/equities
+    depends_on:
+      postgres:
+        condition: service_healthy
     entrypoint: ["yahoo-crawler"]
+
+volumes:
+  postgres_data:

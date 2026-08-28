@@ -15,11 +15,12 @@ infraestrutura, execução reproduzível e testes determinísticos com fixtures.
 
 - coleta por região com paginação e deduplicação por símbolo;
 - CSV mínimo (`symbol`, `name`, `price`) ou enriquecido;
+- carga opcional e idempotente em PostgreSQL;
 - fallback para HTML quando o endpoint do screener não pode ser utilizado;
 - retries e logs estruturados para diagnóstico;
 - artefatos locais para investigar respostas inesperadas;
 - execução local, via Docker ou Docker Compose;
-- testes unitários e smoke test E2E separado.
+- testes unitários e integração real com PostgreSQL.
 
 ## Arquitetura
 
@@ -29,7 +30,8 @@ CLI
       ├── navegador Selenium ──> descoberta do estado do screener
       ├── cliente do screener ─> paginação e dados principais
       ├── cliente de cotações ─> enriquecimento opcional
-      └── exportador CSV ──────> arquivo de saída
+      ├── exportador CSV ──────> arquivo de saída
+      └── repositório SQL ─────> dimensão, fatos diários e auditoria
 ```
 
 O código segue uma estrutura `src/`:
@@ -39,6 +41,7 @@ O código segue uma estrutura `src/`:
 - `infrastructure/browser`: configuração e sincronização do Selenium;
 - `infrastructure/yahoo`: navegação, clientes HTTP e parsing;
 - `infrastructure/export`: serialização para CSV.
+- `infrastructure/postgres`: migrações e carga transacional no warehouse.
 
 O fluxo detalhado e as decisões de fallback estão em
 [`docs/FLUXO_TECNICO.md`](docs/FLUXO_TECNICO.md).
@@ -97,6 +100,32 @@ docker compose run --rm crawler \
   --region Argentina --output /app/output.csv
 ```
 
+O Compose também inicia PostgreSQL e define `DATABASE_URL`, portanto essa execução
+grava o CSV e carrega o warehouse. Para consultar uma amostra:
+
+```bash
+docker compose exec postgres psql -U equities -d equities -c \
+  "SELECT region, symbol, price_date, price FROM equity_daily_prices LIMIT 10;"
+```
+
+Fora do Compose, a persistência é opcional:
+
+```bash
+yahoo-crawler --region Brazil --full \
+  --database-url postgresql://user:password@localhost:5432/equities
+```
+
+## Modelo de dados e idempotência
+
+- `equity_assets`: dimensão com os atributos atuais de cada ativo por região;
+- `equity_daily_prices`: fato com granularidade de um ativo por região e dia;
+- `pipeline_runs`: auditoria da origem, horário e quantidade de registros;
+- `schema_migrations`: controle das versões SQL aplicadas.
+
+A chave `(region, symbol, price_date)` impede duplicações. Uma nova execução no
+mesmo dia atualiza preço, valor de mercado, horário e `run_id` dentro de uma única
+transação. Uma execução em outro dia cria uma nova observação histórica.
+
 ## Qualidade e testes
 
 A pipeline executa lint, testes unitários com relatório de cobertura e análise
@@ -114,11 +143,11 @@ pytest -m "not e2e" --cov=yahoo_crawler --cov-report=term-missing
 mypy src
 ```
 
-O teste marcado como `e2e` acessa um serviço externo e fica fora da validação
-determinística da CI. Para executá-lo conscientemente:
+O teste de integração do PostgreSQL requer uma instância dedicada:
 
 ```bash
-pytest -m e2e
+TEST_DATABASE_URL=postgresql://equities:equities@localhost:5433/equities \
+  pytest tests/integration
 ```
 
 ## Resiliência e limitações
@@ -129,6 +158,8 @@ pytest -m e2e
 - Alguns ativos não possuem `marketCap`; nesses casos o campo permanece vazio.
 - O preço usa `regularMarketPrice.raw` e recorre ao fechamento anterior quando
   o valor intraday não está disponível.
+- A granularidade do histórico é diária; coletas intraday sobrescrevem a
+  observação anterior do mesmo ativo e dia.
 
 Falhas de parsing ou HTTP podem gerar evidências em `artifacts/`, como HTML,
 estado JSON e trechos de resposta. Esses arquivos não devem ser versionados.

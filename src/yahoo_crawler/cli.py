@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 
 from yahoo_crawler.config import Settings
@@ -50,6 +51,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Gera CSV minimal (symbol,name,price) conforme o PDF do desafio.",
     )
+    parser.add_argument(
+        "--database-url",
+        default=os.getenv("DATABASE_URL"),
+        help="URL PostgreSQL opcional para carregar dimensão e histórico diário.",
+    )
 
     return parser
 
@@ -69,6 +75,7 @@ def main() -> None:
         headless=args.headless,
         log_level=args.log_level,
         strict=strict,
+        database_url=args.database_url,
     )
 
     setup_logging(settings.log_level)

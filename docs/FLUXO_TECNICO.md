@@ -7,6 +7,7 @@ Use como referência rápida quando tiver dúvidas.
 - Abrir o Yahoo Finance Equity Screener filtrado por região.
 - Extrair todos os ativos (equities) disponíveis para a região.
 - Gerar um CSV minimal (padrão) ou completo.
+- Carregar opcionalmente uma dimensão e fatos diários no PostgreSQL.
 - Opcionalmente enriquecer dados com a API de quotes.
 
 ## Componentes principais
@@ -15,6 +16,7 @@ Use como referência rápida quando tiver dúvidas.
 - `src/yahoo_crawler/infrastructure/yahoo/parser.py`: parsing do HTML/estado JSON.
 - `src/yahoo_crawler/infrastructure/yahoo/screener_client.py`: API do screener (paginação).
 - `src/yahoo_crawler/infrastructure/yahoo/quote_client.py`: API de quotes (enriquecimento).
+- `src/yahoo_crawler/infrastructure/postgres/repository.py`: carga transacional e idempotente.
 - `src/yahoo_crawler/utils/money.py`: parsing de preço.
 - `scripts/debug_state_path.py`: utilitário de debug do estado.
 
@@ -49,7 +51,11 @@ Use como referência rápida quando tiver dúvidas.
 [Enriquecimento (API quotes)]
         |
         v
-[Escreve CSV]
+[Escreve CSV] ----> [PostgreSQL opcional]
+                         |
+                         +--> equity_assets
+                         +--> equity_daily_prices
+                         +--> pipeline_runs
 ```
 
 ## Fluxo técnico detalhado
@@ -65,6 +71,13 @@ Use como referência rápida quando tiver dúvidas.
 7) Normaliza os dados para o formato de linhas (rows).
 8) (Opcional) Enriquecimento via API de quotes para `currency` e `market_cap`.
 9) Escreve o CSV final.
+10) Quando `DATABASE_URL` está definida, aplica migrações pendentes e carrega:
+   - atributos atuais em `equity_assets`;
+   - uma observação por ativo, região e dia em `equity_daily_prices`;
+   - metadados de execução em `pipeline_runs`.
+
+Toda a carga ocorre na mesma transação. O `ON CONFLICT` torna o reprocessamento
+diário idempotente, atualizando a observação sem criar duplicatas.
 
 ## Saída do CSV
 ### Minimal (padrão)
@@ -107,4 +120,5 @@ Quando há falhas, arquivos são salvos em `artifacts/`:
 
 ## Testes
 - `pytest -q` roda toda a suíte.
-- `pytest -q -m "not e2e"` roda sem Selenium.
+- `pytest -q -m "not e2e"` roda a suíte determinística sem acessar o Yahoo.
+- `TEST_DATABASE_URL=... pytest tests/integration` valida a idempotência no PostgreSQL.

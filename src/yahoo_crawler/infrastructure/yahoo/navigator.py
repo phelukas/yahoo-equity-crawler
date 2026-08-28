@@ -65,11 +65,19 @@ class YahooNavigator:
         url = f"{YAHOO_URL}?{urlencode(params)}"
 
         logger.info("Abrindo página do screener do Yahoo | região=%s | url=%s", region, url)
-        self._driver.get(url)
+        try:
+            self._driver.get(url)
+        except TimeoutException:
+            logger.warning(
+                "Timeout no carregamento completo; continuando com o DOM disponível | url=%s",
+                self._driver.current_url,
+            )
+            self._driver.execute_script("window.stop();")
 
-        # Espera a página finalizar o carregamento
+        # Recursos de terceiros podem nunca concluir; o DOM interativo é suficiente.
         wait(self._driver, self._timeout).until(
-            lambda d: d.execute_script("return document.readyState") == "complete"
+            lambda d: d.execute_script("return document.readyState")
+            in {"interactive", "complete"}
         )
 
         self._handle_consent_if_present()

@@ -29,6 +29,7 @@ output*.csv
 *.sqlite
 artifacts/
 .pytest_cache/
+.coverage
 
 # --- Navegadores (Selenium/Crawlers) ---
 .wdm/
