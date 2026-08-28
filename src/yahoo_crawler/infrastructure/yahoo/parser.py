@@ -305,7 +305,8 @@ def _extract_raw_criteria(payload: dict) -> dict | None:
     if not isinstance(raw, str):
         return None
     try:
-        return json.loads(raw)
+        decoded = json.loads(raw)
+        return decoded if isinstance(decoded, dict) else None
     except json.JSONDecodeError:
         return None
 
