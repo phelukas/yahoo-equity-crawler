@@ -1,8 +1,8 @@
 import csv
 import json
 import logging
-from datetime import datetime, timezone
 from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -13,11 +13,11 @@ from yahoo_crawler.infrastructure.browser.driver_factory import (
 )
 from yahoo_crawler.infrastructure.yahoo.navigator import YahooNavigator
 from yahoo_crawler.infrastructure.yahoo.parser import (
-    extract_screener_seed,
-    parse_screener_seed_body,
     extract_embedded_state,
     extract_quotes,
+    extract_screener_seed,
     normalize_equities,
+    parse_screener_seed_body,
 )
 from yahoo_crawler.infrastructure.yahoo.quote_client import YahooQuoteClient
 from yahoo_crawler.infrastructure.yahoo.screener_client import SCREENER_URL, YahooScreenerClient
@@ -247,3 +247,4 @@ def _safe_keys(data: Any, limit: int = 40) -> list[str]:
     if not isinstance(data, dict):
         return []
     return list(data.keys())[:limit]
+
